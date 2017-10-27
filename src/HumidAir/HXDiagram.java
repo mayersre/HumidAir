@@ -27,6 +27,7 @@ import java.text.DecimalFormat;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import java.awt.Color;
 
 public class HXDiagram extends JPanel {
 
@@ -98,11 +99,18 @@ public class HXDiagram extends JPanel {
 
     public static void CalculateIsolines(List<IsoLine> IsoLines){    
     	//
+        //
+        for (int i = YAxMin; i < YAxMax ; i++) {
+        	//System.out.println("IsoLine t : " + i);
+        	IsoLines.add( calculate_Isothermal(i,AirPressure/100,hr_min,hr_max,(double)YAxMin,(double)YAxMax) );
+        }
+        //
         double[] rh_values = new double[] { 0.05, 0.1,0.15,0.2,0.25,0.3, 0.35, 0.4, 0.5,0.6,0.7,0.8,0.9,1.0 };
         for(double value : rh_values ) {
         	IsoLines.add( calculate_RH_line((double)value,hr_min,hr_max, AirPressure) );
         }
-        IsoLines.add( calculate_RH_line(1.0,hr_min,hr_max, AirPressure));
+        //IsoLines.add( calculate_RH_line(1.0,hr_min,hr_max, AirPressure));
+
     }
     
     public static void PlotIsolines(List<IsoLine> IsoLines,Graphics2D g2, double x_left, double x_right, double y_top, double y_bottom){ 
@@ -171,6 +179,53 @@ public class HXDiagram extends JPanel {
     	return il;
     }
 
+    public static IsoLine calculate_Isothermal(double temperature, double AtmosphericPressure, double xmin, double xmax, double ymin, double ymax){
+    	/**
+    	/*  Returns the IsoLine for temperature
+    	/*  AtmosphericPressure in bar
+    	 *  temperature in °C
+    	 */
+    	//
+    	IsoLine il = new IsoLine();
+    	//    	
+    	double[] xdata = new double[2];
+    	double[] ydata = new double[2];
+    	// Left side, Humidity Ratio = 0
+    	//
+		xdata[0] = 0.0;
+		ydata[0] = temperature * CP_AIR ;
+		il.add(xdata[0], ydata[0]);
+    	//(double)(i * stepSize)
+		xdata[1] = HumidityRatio_p_t_phi(AtmosphericPressure,temperature,1);
+		if (xdata[1] > xmax ) {
+			// we are right side outside, use right side limit
+			xdata[1] = xmax ;
+			ydata[1] = Enthalpy_p_t_x(AtmosphericPressure,temperature,xmax)-(double)(xdata[1]*R_0);
+		} else {
+			ydata[1] = Enthalpy_p_t_phi(AtmosphericPressure,temperature,1)-(double)(xdata[1]*R_0);
+		}
+		if (ydata[1] > ymax ) {
+			// we are top outside, use top limit
+			// now some algebra
+			double slope = (ydata[1]-ydata[0])/(xdata[1]-xdata[0]);
+			double point = ydata[1] -(slope * xdata[1]);
+			//
+			ydata[1] = ymax ;
+			// for this y we need x
+			xdata[1] = ( ydata[1] - point ) / slope ;
+					
+		} 
+		
+		il.add(xdata[1], ydata[1]);
+		il.setColor(Color.RED);
+		//
+    	//String Label = new DecimalFormat(" #").format(rh *100.0);
+    	//String Label = (rh *100.0) + "";
+    	//il.setLabel(Label +"% ");
+    	//
+    	return il;
+    }
+    
     public static void plot_IsoLine(Graphics2D g,IsoLine iLine, double xmin, double xmax, double ymin, double ymax,
     								double x_left, double x_right, double y_top, double y_bottom){
     	/**
@@ -180,6 +235,8 @@ public class HXDiagram extends JPanel {
     	 */
     	double[] xdata = iLine.getXdata() ;
     	double[] ydata = iLine.getYdata() ;
+    	Color plotcolor = iLine.getColor();
+    	g.setColor(plotcolor);
     	//
     	int datalength = xdata.length;
     	double[] x_plot_data = new double[datalength];
@@ -191,6 +248,15 @@ public class HXDiagram extends JPanel {
     	int FirstYIndex=0;
     	int LastYIndex=0;
     	//
+    	if (xdata.length == 2 ) {
+			x_plot_data[0] = interpol_lin(xmin,xdata[0],xmax, x_left, x_right);
+			y_plot_data[0] = interpol_lin(ymax,ydata[0],ymin, y_top, y_bottom);
+			x_plot_data[1] = interpol_lin(xmin,xdata[1],xmax, x_left, x_right);
+			y_plot_data[1] = interpol_lin(ymax,ydata[1],ymin, y_top, y_bottom);
+			if (ydata[0] < ymax ) {
+				g.draw(new Line2D.Double(x_plot_data[0], y_plot_data[0], x_plot_data[1], y_plot_data[1]));
+			}
+    	} else {
      	for (int i = 1; i < xdata.length; i++) {
     		//
     		if (ydata[i] > ymin && ydata[i-1] > ymin){
@@ -248,7 +314,7 @@ public class HXDiagram extends JPanel {
     	} else {
     		; // no strategy yet 
     	}
-    			
+    	}		
     	
     }
     
