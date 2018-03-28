@@ -1,0 +1,6 @@
+Name: HumidAir
+Specification-Title: "Humid Air Classes" 
+Specification-Version: "1.0"
+Main-Class:  HumidAir.HXDiagram
+
+
