@@ -20,5 +20,16 @@ Units like common on the european continent.
 
 Humid air is treated like an ideal gas.
 
-(c) 2010-2017 Reiner Mayers 
+Just run the jar file with java 8 like :
+::
+
+	java -jar HumidAir.jar
+
+The sources can be built using ant in the src directory :
+::
+
+	ant compile jar run
+	
+
+(c) 2010-2018 Reiner Mayers 
 This code comes under the GNU Copyleft (GPL) V3.0
