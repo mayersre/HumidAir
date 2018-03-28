@@ -80,13 +80,13 @@ def cw():
 # Enthalpy required to freeze water to ice 
 def cE():
     _ret = None
-    _ret = 2.07
+    _ret = 333.4
     return _ret
 
 # Heat capacity of ice
 def rE():
     _ret = None
-    _ret = 333.4
+    _ret = 2.07
     return _ret
 
 # Avogadros Number
